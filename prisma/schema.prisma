@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DocumentType {
+  CPF
+  CNPJ
+  RG
+}
+
+enum AddressType {
+  RESIDENTIAL
+  COMMERCIAL
+  OTHER
+}
+
+enum PhoneType {
+  FIXED
+  MOBILE
+  MESSAGE
+  OTHER
+}
+
+enum EmailType {
+  PERSONAL
+  COMMERCIAL
+  OTHER
+}
+
+model Person {
+  id           String       @id @default(uuid())
+  name         String
+  document     String
+  documentType DocumentType
+  email        String?      @unique
+  accountId    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt @default(now())
+
+  @@map("people")
+  @@unique([accountId, document])
+  @@unique([id, accountId], name: "id_accountId")
+  @@index([accountId])
+  PersonAddress PersonAddress[]
+  PersonPhone PersonPhone[]
+  EmailPhone PersonEmail[]
+}
+
+model PersonAddress {
+  id           String      @id @default(uuid())
+  personId     String
+  accountId    String
+  type         AddressType
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String      
+  postalCode   String      
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt @default(now())
+
+  person      Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@map("people_addresses")
+  @@index([accountId])
+  @@unique([id, accountId], name: "id_accountId")
+}
+
+model PersonPhone {
+  id          String      @id @default(uuid())
+  personId    String
+  accountId   String
+  type        PhoneType
+  number      String      
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt @default(now())
+
+  person      Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@map("people_phones")
+  @@index([accountId])
+  @@unique([id, accountId], name: "id_accountId")
+}
+
+model PersonEmail {
+  id          String      @id @default(uuid())
+  personId    String
+  accountId   String
+  type        EmailType
+  email       String      
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt @default(now())
+
+  person      Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@map("people_emails")
+  @@index([accountId])
+  @@unique([id, accountId], name: "id_accountId")
+}
