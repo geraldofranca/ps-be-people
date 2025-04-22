@@ -8,8 +8,7 @@ export class ListPersonsUseCase {
   ) {}
 
   async execute(document: string, accountId: string) {
-    return this.repo.findByDocument(accountId, document)
-      ? [await this.repo.findByDocument(accountId, document)!]
-      : [];
+    const person = await this.repo.findByDocument(accountId, document);
+    return person ? [person] : [];
   }
 }

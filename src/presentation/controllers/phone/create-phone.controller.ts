@@ -20,7 +20,6 @@ export class CreatePhonePersonController {
     @Req() req: Request,
   ) {
     try {
-      console.log(dto);
       const addr = await this.usecase.execute(dto, personId, req.accountId);
       return created(addr);
     } catch (err) {
