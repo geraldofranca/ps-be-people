@@ -1,73 +1,149 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# ms‑person Microservice
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based microservice for “Person” management in a SaaS ERP, with multi‑tenant support, addresses & phones sub‑resources, domain events via SNS/SQS, Zod validation, Prisma ORM and LocalStack for local development.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🔍 Table of Contents
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+1. Tech Stack  
+2. Prerequisites  
+3. Getting Started  
+4. Environment Variables  
+5. Docker Compose (Local Dev)  
+6. Database Setup & Migrations  
+7. Running the App  
+8. API Endpoints  
+9. Error Handling  
+10. Domain Events  
+11. Contributing  
+12. License  
 
-## Installation
+---
 
-```bash
-$ npm install
-```
+## 🛠️ Tech Stack
 
-## Running the app
+- NestJS (v10+)  
+- TypeScript  
+- Prisma ORM → PostgreSQL  
+- Zod for validation  
+- AWS SNS/SQS (via LocalStack)  
+- GlobalExceptionFilter  
+- Docker & Docker‑Compose  
 
-```bash
-# development
-$ npm run start
+---
 
-# watch mode
-$ npm run start:dev
+## ⚙️ Prerequisites
 
-# production mode
-$ npm run start:prod
-```
+- Node.js ≥ 18  
+- npm or yarn  
+- Docker & Docker‑Compose  
+- AWS CLI (optional)  
 
-## Test
+---
+
+## 🚀 Getting Started
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone https://github.com/your-org/ms-person.git
+cd ms-person
+npm install
+cp .env.example .env.dev
+# Edit .env.dev as needed
+docker-compose up -d
+npx prisma migrate dev --name init
+npx prisma generate
+npm run start:dev
 ```
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🔑 Environment Variables
 
-## Stay in touch
+```ini
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/common
+AWS_REGION=us-east-1
+SNS_ARN_person_created=arn:aws:sns:us-east-1:000000000000:person-created
+SNS_ARN_person_updated=arn:aws:sns:us-east-1:000000000000:person-updated
+PORT=3002
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
-## License
+## 🐳 Docker Compose
 
-Nest is [MIT licensed](LICENSE).
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    env_file: .env.dev
+    ports: ['5432:5432']
+  localstack:
+    image: localstack/localstack
+    environment:
+      - SERVICES=sns,sqs
+      - DEFAULT_REGION=${AWS_REGION}
+    ports: ['4566:4566']
+```
+
+---
+
+## 🎯 API Endpoints
+
+**Headers required:**  
+`Content-Type: application/json`  
+`x-account-id: <accountId>`
+
+### Persons
+
+- `POST /persons`
+- `GET /persons/:id`
+- `GET /persons?document=...`
+- `PATCH /persons/:id`
+
+### Addresses
+
+- `POST /persons/:personId/addresses`
+- `GET /persons/:personId/addresses`
+- `PATCH /persons/:personId/addresses/:addressId`
+- `DELETE /persons/:personId/addresses/:addressId`
+
+### Phones
+
+- `POST /persons/:personId/phones`
+- `GET /persons/:personId/phones`
+- `PATCH /persons/:personId/phones/:phoneId`
+- `DELETE /persons/:personId/phones/:phoneId`
+
+---
+
+## 🛡️ Error Handling
+
+Global exception filter maps:
+
+- `400` → Validation errors
+- `404` → Not found
+- `409` → Conflict
+- `500` → Internal errors
+
+---
+
+## 📣 Domain Events
+
+- Publishes `person.created` and `person.updated` to SNS  
+- Uses LocalStack locally  
+
+---
+
+## 🤝 Contributing
+
+1. Fork  
+2. Branch  
+3. PR  
+
+---
+
+## 📄 License
+
+MIT © 2025 Mentor TI
